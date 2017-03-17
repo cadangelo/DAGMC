@@ -2,6 +2,7 @@
 
 #include "DagMC.hpp"
 #include "dagmcmetadata.hpp"
+#include "dagmctransform.hpp"
 using moab::DagMC;
 
 #include <limits>
@@ -19,6 +20,7 @@ using moab::DagMC;
 
 moab::DagMC *DAG;
 dagmcMetaData *DMD;
+dagmcTransform *DTR;
 UWUW *workflow_data;
 
 #define DGFM_SEQ   0
@@ -96,6 +98,9 @@ void dagmcinit_(char *cfile, int *clen,  // geom
     exit(EXIT_FAILURE);
   }
 
+  // initialize transformation class
+  DTR = new dagmcTransform(DAG);
+  
   // intialize the metadata
   DMD = new dagmcMetaData(DAG);
   DMD->load_property_data();
@@ -139,6 +144,8 @@ void dagmcwritefacets_(char *ffile, int *flen)  // facet file
   return;
 
 }
+
+//void dagmcgettr_(int tr_num, double d_x, double d_y, double d_z)
 
 void dagmcwritemcnp_(char* dagfile, char *lfile, int *llen, char *mcnp_version_major)  // file with cell/surface cards
 {
@@ -733,6 +740,43 @@ void dagmc_getpar_( int* n )
   history = pblcm_history_stack[*n];
 }
 
+void dodagmctrcl_(int* mxtr, double* trf)
+{
+  moab::ErrorCode rval;
+  std::cout << "dagtrcl fxn" << std::endl;
+  std::cout << "mxtr " << *mxtr << std::endl;
+  // default # rows in trf array is 17
+  //for(int i = 0; i < (*mxtr)*17; ++i)
+  double dx, dy, dz;
+
+  for(int i = 0; i < *mxtr; ++i)
+    {
+      //std::cout << "trf array1 " << trf[i] << std::endl;
+      std::cout << "transform " << i+1 << std::endl;
+      std::cout << "tr card # " << -1*trf[i*17] << std::endl;
+      std::cout << "dx " << -1*trf[1+i*17] << std::endl;
+      dx = -1*trf[1+i*17];
+      std::cout << "dy " << -1*trf[2+i*17] << std::endl;
+      std::cout << "dz " << -1*trf[3+i*17] << std::endl;
+    }
+  int num_vols = DAG->num_entities(3);
+  //will need to call DAG fxn that will get the vert coords
+
+/*  moab::Range verts;
+  moab::Range::iterator it, itr;
+  std::cout << "num vols " << num_vols << std::endl;
+  for (int i = 0; i < num_vols; ++i) {
+    get_verts_( DAG->entity_by_index(3, i), verts);
+  }
+  double xyz[3], xyz_new[3];
+  for (it = verts.begin(); it != verts.end(); it++){
+    rval = mbi->get_coords(&(*it), 1, xyz);
+    std::cout << "x_o " <<  xyz[0] << std::endl;
+    xyz_new[0] = xyz[0] + dx;
+    std::cout << "x_new " <<  xyz_new[0] << std::endl;
+  }
+*/ 
+}
 
 void dagmcvolume_(int* mxa, double* vols, int* mxj, double* aras)
 {
