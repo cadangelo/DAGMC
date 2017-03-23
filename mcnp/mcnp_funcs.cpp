@@ -17,7 +17,6 @@ using moab::DagMC;
 #endif
 
 // globals
-
 moab::DagMC *DAG;
 dagmcMetaData *DMD;
 dagmcTransform *DTR;
@@ -99,7 +98,8 @@ void dagmcinit_(char *cfile, int *clen,  // geom
   }
 
   // initialize transformation class
-  DTR = new dagmcTransform(DAG);
+  moab::Interface *MBI = DAG->moab_instance();
+  DTR = new dagmcTransform(MBI);
   
   // intialize the metadata
   DMD = new dagmcMetaData(DAG);
@@ -761,6 +761,10 @@ void dodagmctrcl_(int* mxtr, double* trf)
     }
   int num_vols = DAG->num_entities(3);
   //will need to call DAG fxn that will get the vert coords
+
+  moab::EntityHandle vol;
+  moab::Range verts;
+  DTR->get_verts(vol, verts);
 
 /*  moab::Range verts;
   moab::Range::iterator it, itr;
