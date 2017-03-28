@@ -134,7 +134,7 @@ extern "C" {
 
 // struct to hold particle state
 struct particle_state {
-  moab::DagMC::RayHistory history;
+  moab::GeomQueryTool::RayHistory history;
   bool on_boundary;
   double old_direction[3];
   double old_position[3];

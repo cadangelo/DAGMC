@@ -36,11 +36,11 @@ static std::ostream* raystat_dump = NULL;
 
 /* Static values used by dagmctrack_ */
 
-static DagMC::RayHistory history;
+static moab::GeomQueryTool::RayHistory history;
 static int last_nps = 0;
-static double last_uvw[3] = {0, 0, 0};
-static std::vector< DagMC::RayHistory > history_bank;
-static std::vector< DagMC::RayHistory > pblcm_history_stack;
+static double last_uvw[3] = {0,0,0};
+static std::vector< moab::GeomQueryTool::RayHistory > history_bank;
+static std::vector< moab::GeomQueryTool::RayHistory > pblcm_history_stack;
 static bool visited_surface = false;
 
 static bool use_dist_limit = false;

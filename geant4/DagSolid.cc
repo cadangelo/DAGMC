@@ -282,7 +282,7 @@ G4double DagSolid::DistanceToIn(const G4ThreeVector& p,
   EntityHandle next_surf;
   G4double distance;
 
-  DagMC::RayHistory history;
+  moab::GeomQueryTool::RayHistory history;
 
   // perform the ray fire with modified dag call
   fdagmc->ray_fire(fvolEntity, position, dir, next_surf, distance, &history, 0, -1);
@@ -348,7 +348,7 @@ G4double DagSolid::DistanceToOut(const G4ThreeVector& p,
 
   EntityHandle next_surf;
   double next_dist;
-  DagMC::RayHistory history;
+  moab::GeomQueryTool::RayHistory history;
 
   fdagmc->ray_fire(fvolEntity, position, dir, next_surf, next_dist, &history, 0, 1);
   history.reset();
