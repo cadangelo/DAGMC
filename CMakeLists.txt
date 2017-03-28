@@ -45,7 +45,6 @@ endif (STATIC_LIB)
 # Allow use of find_package(HDF5), find_package(MOAB), etc.
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_LIST_DIR}/cmake)
 
-
 # Make sure we have HDF5 and MOAB
 find_package(HDF5 REQUIRED)
 find_package(MOAB REQUIRED)
@@ -61,6 +60,9 @@ if (DAGMC_LIBRARIES)
 else ()
   set(DAG_LINK_LIBS "dagmc ${MOAB_LIBRARIES}")
 endif (DAGMC_LIBRARIES)
+
+# Turn off annoying warning from MOAB
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-ignored-attributes")
 
 # Build Gtest
 add_subdirectory(gtest)
