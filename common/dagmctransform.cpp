@@ -34,3 +34,51 @@ moab::ErrorCode dagmcTransform::get_verts(moab::EntityHandle vol, moab::Range &v
        }
    }
 }
+
+moab::ErrorCode dagmcTransform::translate(moab::Range vertices, double* trans_vec)
+{
+  moab::ErrorCode rval;
+/*
+  // get starting position
+  std::map<EntityHandle, XYZ> orig_positions;
+  rval = get_orig_positions(vertices, orig_positons);
+  MB_CHK_ERR(rval);
+*/
+  // loop over all vertices, get coordinates, update position, save
+  moab::Range::iterator it;
+  double xyz_0[3], xyz[3];
+  for (it = vertices.begin(); it != vertices.end(); ++it)
+    {
+      rval = MBI->get_coords(&(*it), 1, xyz_0);
+      MB_CHK_SET_ERR(rval, "Failed to get vertex coordinates");
+    
+      xyz[0] = xyz_0[0] + trans_vec[0];
+      xyz[1] = xyz_0[1] + trans_vec[1];
+      xyz[2] = xyz_0[2] + trans_vec[2];
+
+      rval = MBI->set_coords(&(*it), 1, xyz);
+      MB_CHK_SET_ERR(rval, "Failed to set vertex coordinates");
+    }
+}
+/*
+moab::ErrorCode dagmcTransform::get_orig_positions(moab::Range verts, std::map<EntityHandle, XYZ> &orig_positions)
+{
+  moab::ErrorCode rval;
+  moab::Range::iterator it;
+  //get starting position of each moving vertex
+  // loop over all vertices, get coordinates and save them to map
+  for (it = mv.begin(); it != mv.end(); ++it)
+    {
+      rval = MBI->get_coords(&(*it), 1, xyz);
+      CHECK_ERR(rval);
+
+      p.x = xyz[0];
+      p.y = xyz[1];
+      p.z = xyz[2];
+
+      //keep original position of each vertex
+      orig_positions[*it] = p;
+    }
+}
+*/
+

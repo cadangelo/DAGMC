@@ -10,6 +10,9 @@ class dagmcTransform
 
   moab::ErrorCode get_verts(moab::EntityHandle vol, moab::Range &verts);
 
+  // Translate range of vertices according to translation vector
+  moab::ErrorCode translate(moab::Range vertices, double* trans_vec);
+
 
   // private member functions
  private:

@@ -89,6 +89,9 @@ void dagmcinit_(char *cfile, int *clen,  // geom
   }
 #endif
 
+  // initialize transformation class
+  moab::Interface *MBI = DAG->moab_instance();
+  DTR = new dagmcTransform(MBI);
 
   // initialize geometry
   rval = DAG->init_OBBTree();
@@ -97,9 +100,6 @@ void dagmcinit_(char *cfile, int *clen,  // geom
     exit(EXIT_FAILURE);
   }
 
-  // initialize transformation class
-  moab::Interface *MBI = DAG->moab_instance();
-  DTR = new dagmcTransform(MBI);
   
   // intialize the metadata
   DMD = new dagmcMetaData(DAG);
@@ -745,32 +745,50 @@ void dodagmctrcl_(int* mxtr, double* trf)
   moab::ErrorCode rval;
   std::cout << "dagtrcl fxn" << std::endl;
   std::cout << "mxtr " << *mxtr << std::endl;
-  // default # rows in trf array is 17
-  //for(int i = 0; i < (*mxtr)*17; ++i)
   double dx, dy, dz;
-
-  for(int i = 0; i < *mxtr; ++i)
+  double trans_vec[3];  
+  // loop over all TR cards and find translations
+  for(int i = 1; i <= *mxtr; ++i)
     {
       //std::cout << "trf array1 " << trf[i] << std::endl;
-      std::cout << "transform " << i+1 << std::endl;
+      // default # rows in trf array is 17
+      std::cout << "transform " << i << std::endl;
       std::cout << "tr card # " << -1*trf[i*17] << std::endl;
-      std::cout << "dx " << -1*trf[1+i*17] << std::endl;
-      dx = -1*trf[1+i*17];
-      std::cout << "dy " << -1*trf[2+i*17] << std::endl;
-      std::cout << "dz " << -1*trf[3+i*17] << std::endl;
+      trans_vec[0] = -1*trf[1+i*17];
+      trans_vec[1] = -1*trf[2+i*17];
+      trans_vec[2] = -1*trf[3+i*17];
+      std::cout << "dx " << trans_vec[0] << std::endl;
+      std::cout << "dy " << trans_vec[1] << std::endl;
+      std::cout << "dz " << trans_vec[2] << std::endl;
+    
+ 
+      // loop through all volumes, get ones w/ moving tag, then gather vertices
+      moab::EntityHandle vol;
+      moab::Range verts;
+      int num_vols = DAG->num_entities(3);
+      for (int i = 0; i < num_vols; ++i) {
+        rval = DTR->get_verts(vol, verts);
+        if (moab::MB_SUCCESS != rval) {
+          std::cerr << "DAGMC failed to get vertices rval: " << rval << std::endl;
+          exit(EXIT_FAILURE);
+        }
+        //MB_CHK_SET_ERR(rval, "Failed to get vertices from moving vols");
+      }
+  
+      rval = DTR->translate(verts, trans_vec);
+      if (moab::MB_SUCCESS != rval) {
+        std::cerr << "DAGMC failed to translate vertices rval: " << rval << std::endl;
+        exit(EXIT_FAILURE);
+      }
+        //MB_CHK_SET_ERR(rval, "Failed to translate vertices");
     }
-  int num_vols = DAG->num_entities(3);
-  //will need to call DAG fxn that will get the vert coords
+//  rval =  DTR->rotate(vert, rotation_params);
 
-  moab::EntityHandle vol;
-  moab::Range verts;
-  DTR->get_verts(vol, verts);
+  //  loop over vols and delete and rebuild obbs
 
 /*  moab::Range verts;
   moab::Range::iterator it, itr;
   std::cout << "num vols " << num_vols << std::endl;
-  for (int i = 0; i < num_vols; ++i) {
-    get_verts_( DAG->entity_by_index(3, i), verts);
   }
   double xyz[3], xyz_new[3];
   for (it = verts.begin(); it != verts.end(); it++){
