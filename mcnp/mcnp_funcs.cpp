@@ -94,9 +94,11 @@ void dagmcinit_(char *cfile, int *clen,  // geom
   DTR = new dagmcTransform(MBI);
 
   // initialize geometry
-  rval = DAG->init_OBBTree();
+  //rval = DAG->init_OBBTree();
+  rval = DAG->setup_impl_compl();
+  rval = DAG->setup_indices();
   if (moab::MB_SUCCESS != rval) {
-    std::cerr << "DAGMC failed to initialize geometry and create OBB tree" <<  std::endl;
+    std::cerr << "DAGMC failed to set up indices" <<  std::endl;
     exit(EXIT_FAILURE);
   }
 
@@ -108,6 +110,19 @@ void dagmcinit_(char *cfile, int *clen,  // geom
 
   pblcm_history_stack.resize( *max_pbl+1 ); // fortran will index from 1
 
+}
+
+void dagmcbuildobbs_()
+{
+  moab::ErrorCode rval;
+  // build obb tree
+  rval = DAG->setup_obbs();
+  if (moab::MB_SUCCESS != rval) {
+    std::cerr << "DAGMC failed to set up obb tree" <<  std::endl;
+    exit(EXIT_FAILURE);
+  }
+
+  return;
 }
 
 void dagmcwritefacets_(char *ffile, int *flen)  // facet file
@@ -746,58 +761,77 @@ void dodagmctrcl_(int* mxtr, double* trf)
   std::cout << "dagtrcl fxn" << std::endl;
   std::cout << "mxtr " << *mxtr << std::endl;
   double dx, dy, dz;
-  double trans_vec[3];  
+  double trans_vec[12];  
   // loop over all TR cards and find translations
   for(int i = 1; i <= *mxtr; ++i)
     {
-      //std::cout << "trf array1 " << trf[i] << std::endl;
       // default # rows in trf array is 17
       std::cout << "transform " << i << std::endl;
       std::cout << "tr card # " << -1*trf[i*17] << std::endl;
-      trans_vec[0] = -1*trf[1+i*17];
-      trans_vec[1] = -1*trf[2+i*17];
-      trans_vec[2] = -1*trf[3+i*17];
-      std::cout << "dx " << trans_vec[0] << std::endl;
-      std::cout << "dy " << trans_vec[1] << std::endl;
-      std::cout << "dz " << trans_vec[2] << std::endl;
+      for (int j = 1; j < 13; j++) {
+        trans_vec[j-1] = trf[j+i*17];
+      }
+       std::cout << "dx " << trans_vec[0] << std::endl;
+       std::cout << "dy " << trans_vec[1] << std::endl;
+       std::cout << "dz " << trans_vec[2] << std::endl;
+       std::cout << "r1 " << trans_vec[3] << std::endl;
+       std::cout << "r2 " << trans_vec[4] << std::endl;
+       std::cout << "r3 " << trans_vec[5] << std::endl;
+       std::cout << "r4 " << trans_vec[6] << std::endl;
+       std::cout << "r5 " << trans_vec[7] << std::endl;
+       std::cout << "r6 " << trans_vec[8] << std::endl;
+       std::cout << "r7 " << trans_vec[9] << std::endl;
+       std::cout << "r8 " << trans_vec[10] << std::endl;
+       std::cout << "r9 " << trans_vec[11] << std::endl;
     
- 
+      bool translate = true;
+      bool rotate = true;
+      if (0 == trans_vec[0]*(-1) && 0 == trans_vec[1]*(-1) && 0 == trans_vec[2]*(-1)) {
+        translate = false;
+      }
+      if (1 == trans_vec[3] && 0 == trans_vec[4] && 0 == trans_vec[5] &&
+          0 == trans_vec[6] && 1 == trans_vec[7] && 0 == trans_vec[8] &&
+          0 == trans_vec[9] && 0 == trans_vec[10] && 1 == trans_vec[11]) {
+        rotate = false;
+      }
+      std::cout << "translate " << translate << "  rotate " << rotate << std:: endl;
+
       // loop through all volumes, get ones w/ moving tag, then gather vertices
       moab::EntityHandle vol;
       moab::Range verts;
       int num_vols = DAG->num_entities(3);
-      for (int i = 0; i < num_vols; ++i) {
+      for (int i = 1; i <= num_vols; ++i) {
+        vol = DAG->entity_by_index( 3, i );
         rval = DTR->get_verts(vol, verts);
         if (moab::MB_SUCCESS != rval) {
           std::cerr << "DAGMC failed to get vertices rval: " << rval << std::endl;
           exit(EXIT_FAILURE);
         }
-        //MB_CHK_SET_ERR(rval, "Failed to get vertices from moving vols");
       }
-  
-      rval = DTR->translate(verts, trans_vec);
-      if (moab::MB_SUCCESS != rval) {
-        std::cerr << "DAGMC failed to translate vertices rval: " << rval << std::endl;
-        exit(EXIT_FAILURE);
+      
+      // if translate is true, move the vertices accordingly
+      if (translate) {
+        double x_0;
+        rval = DTR->pass_coords(*verts.begin(), x_0);
+        std::cout << "x_0 " << x_0 << std::endl;
+        rval = DTR->translate(verts, trans_vec);
+        if (moab::MB_SUCCESS != rval) {
+          std::cerr << "DAGMC failed to translate vertices rval: " << rval << std::endl;
+          exit(EXIT_FAILURE);
+        }
+        double x;
+        rval = DTR->pass_coords(*verts.begin(), x);
+        std::cout << "x " << x << std::endl;
       }
-        //MB_CHK_SET_ERR(rval, "Failed to translate vertices");
+      // if rotate is true, move the vertics accordingly
+      if (rotate) {
+      //  rval =  DTR->rotate(vert, rotation_params);
+      }
+
+      //  loop over vols and delete and rebuild obbs
+      
     }
-//  rval =  DTR->rotate(vert, rotation_params);
 
-  //  loop over vols and delete and rebuild obbs
-
-/*  moab::Range verts;
-  moab::Range::iterator it, itr;
-  std::cout << "num vols " << num_vols << std::endl;
-  }
-  double xyz[3], xyz_new[3];
-  for (it = verts.begin(); it != verts.end(); it++){
-    rval = mbi->get_coords(&(*it), 1, xyz);
-    std::cout << "x_o " <<  xyz[0] << std::endl;
-    xyz_new[0] = xyz[0] + dx;
-    std::cout << "x_new " <<  xyz_new[0] << std::endl;
-  }
-*/ 
 }
 
 void dagmcvolume_(int* mxa, double* vols, int* mxj, double* aras)

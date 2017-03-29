@@ -49,6 +49,9 @@ extern "C" {
   /* Move the geometry*/
   void dodagmctrcl_(int* mxtr, double* trf);
 
+  /* Build the obb tree*/
+  void dagmcbuildobbs_();
+
   /* write facet file after initialization and OBBTree generation */
   void dagmcwritefacets_(char *ffile, int *flen);
 

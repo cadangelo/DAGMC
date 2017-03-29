@@ -9,6 +9,7 @@ class dagmcTransform
   ~dagmcTransform();
 
   moab::ErrorCode get_verts(moab::EntityHandle vol, moab::Range &verts);
+  moab::ErrorCode pass_coords(moab::EntityHandle vert, double &xval);
 
   // Translate range of vertices according to translation vector
   moab::ErrorCode translate(moab::Range vertices, double* trans_vec);

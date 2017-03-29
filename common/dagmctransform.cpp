@@ -24,15 +24,19 @@ moab::ErrorCode dagmcTransform::get_verts(moab::EntityHandle vol, moab::Range &v
   surf_set.clear();
   vert_set.clear();
 
-  MBI->get_child_meshsets(vol, surf_set);
+  rval = MBI->get_child_meshsets(vol, surf_set);
+  MB_CHK_SET_ERR(rval, "Failed to get child meshsets");
   for (it = surf_set.begin(); it != surf_set.end(); it++)
    {
      rval =  MBI->get_entities_by_type(*it, moab::MBVERTEX, vert_set);
+     MB_CHK_SET_ERR(rval, "Failed to get the volume's vertices");
      for (itr = vert_set.begin(); itr != vert_set.end(); itr++)
        {
          verts.insert(*itr);
        }
    }
+
+  return moab::MB_SUCCESS;
 }
 
 moab::ErrorCode dagmcTransform::translate(moab::Range vertices, double* trans_vec)
@@ -52,13 +56,23 @@ moab::ErrorCode dagmcTransform::translate(moab::Range vertices, double* trans_ve
       rval = MBI->get_coords(&(*it), 1, xyz_0);
       MB_CHK_SET_ERR(rval, "Failed to get vertex coordinates");
     
-      xyz[0] = xyz_0[0] + trans_vec[0];
-      xyz[1] = xyz_0[1] + trans_vec[1];
-      xyz[2] = xyz_0[2] + trans_vec[2];
+      // translation vector elements from mcnp trf have the opposite sign
+      xyz[0] = xyz_0[0] + trans_vec[0]*(-1);
+      xyz[1] = xyz_0[1] + trans_vec[1]*(-1);
+      xyz[2] = xyz_0[2] + trans_vec[2]*(-1);
 
       rval = MBI->set_coords(&(*it), 1, xyz);
       MB_CHK_SET_ERR(rval, "Failed to set vertex coordinates");
     }
+}
+
+moab::ErrorCode dagmcTransform::pass_coords(moab::EntityHandle vert, double &xval)
+{
+  moab::ErrorCode rval;
+  double xyz[3];
+  rval = MBI->get_coords(&vert, 1, xyz);
+  MB_CHK_SET_ERR(rval, "Failed to get vertex coordinates");
+  xval = xyz[0];
 }
 /*
 moab::ErrorCode dagmcTransform::get_orig_positions(moab::Range verts, std::map<EntityHandle, XYZ> &orig_positions)
