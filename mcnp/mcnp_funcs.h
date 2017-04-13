@@ -46,6 +46,11 @@ extern "C" {
   /* Reset the current particle state using temporary index n*/
   void dagmc_getpar_( int* n );
 
+  /* Build the obb trees */
+  void dagmcbuildobbs_();
+
+  void dagmctransform_(int* mxtr, double* trf);
+
   /* write facet file after initialization and OBBTree generation */
   void dagmcwritefacets_(char *ffile, int *flen);
 
