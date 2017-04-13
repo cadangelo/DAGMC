@@ -2,9 +2,11 @@ message(STATUS "Building dagmciface library")
 
 # Source files
 list(APPEND DI_SRC_FILES dagmcmetadata.cpp)
+list(APPEND DI_SRC_FILES dagmctransform.cpp)
                                 
 # Public headers
 list(APPEND DI_PUB_HEADERS dagmcmetadata.hpp)
+list(APPEND DI_PUB_HEADERS dagmctransform.hpp)
 
 # Include directories
 include_directories(.)
