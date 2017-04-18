@@ -136,22 +136,13 @@ void dagmctransform_(int* mxtr, double* trf)
     {
       // default # rows in trf array is 17
       std::cout << "transform " << i << std::endl;
-      std::cout << "tr card # " << -1*trf[i*17] << std::endl;
+      //std::cout << "tr card # " << -1*trf[i*17] << std::endl;
       for (int j = 1; j < 13; j++) {
         trans_vec[j-1] = trf[j+i*17];
       }
-       std::cout << "dx " << trans_vec[0] << std::endl;
-       std::cout << "dy " << trans_vec[1] << std::endl;
-       std::cout << "dz " << trans_vec[2] << std::endl;
-       std::cout << "r1 " << trans_vec[3] << std::endl;
-       std::cout << "r2 " << trans_vec[4] << std::endl;
-       std::cout << "r3 " << trans_vec[5] << std::endl;
-       std::cout << "r4 " << trans_vec[6] << std::endl;
-       std::cout << "r5 " << trans_vec[7] << std::endl;
-       std::cout << "r6 " << trans_vec[8] << std::endl;
-       std::cout << "r7 " << trans_vec[9] << std::endl;
-       std::cout << "r8 " << trans_vec[10] << std::endl;
-       std::cout << "r9 " << trans_vec[11] << std::endl;
+      std::cout << "dx " << trans_vec[0] << std::endl;
+      std::cout << "dy " << trans_vec[1] << std::endl;
+      std::cout << "dz " << trans_vec[2] << std::endl;
     
       bool translate = true;
       bool rotate = true;
@@ -163,66 +154,44 @@ void dagmctransform_(int* mxtr, double* trf)
           0 == trans_vec[9] && 0 == trans_vec[10] && 1 == trans_vec[11]) {
         rotate = false;
       }
-      std::cout << "translate " << translate << "  rotate " << rotate << std:: endl;
+      //std::cout << "translate " << translate << "  rotate " << rotate << std:: endl;
 
-      // loop through all volumes, get ones w/ moving tag, then gather vertices
+      // loop through all volumes, if tr tag matches current tr, gather vertices
       moab::EntityHandle vol;
       moab::Range verts;
-/*	  DMD->get_volume_property_data
-	  DMD->tr_data_eh[eh];
+      std::string tr_string;
+	  std::string mat_string;
+	  std::vector<std::string>::iterator it;
       int num_vols = DAG->num_entities(3);
-      for (int i = 1; i <= num_vols; ++i) {
-    std::string prop = DMD->get_volume_property("tr",i,true);
-    std::vector<std::string> tr_props = DMD->unpack_string(prop,"|");
-    moab::EntityHandle eh = DAG->entity_by_id(3,i);
-    if(tr_props.size() >= 1 && tr_props[0] != "" ) {
-      for ( it = tr_props.begin() ; it != tr_props.end() ; ++it ) {
-        tr_info tr_data = make_tr_groupname(*it,3,eh);
-        tr_list.insert(tr_list.begin(),tr_data);
-      }
-    }
-	*/  std::string tr_string;
-	    std::string mat_string;
-		std::vector<std::string>::iterator it;
-        int num_vols = DAG->num_entities(3);
-        for (int k = 1; k <= num_vols; ++k) {
-          vol = DAG->entity_by_index( 3, k );
-          std::string prop = DMD->get_volume_property("tr",vol);
-          std::vector<std::string> tr_props = DMD->unpack_string(prop,"|");
-	      tr_string = DMD->tr_data_eh[vol];
-	      mat_string = DMD->volume_material_property_data_eh[vol];
-	      std::cout << "mat string " << mat_string << std::endl;
-	      std::cout << "tr string " << tr_string << std::endl;
-          if(tr_props.size() >= 1 && tr_props[0] != "" ) {
-            for ( it = tr_props.begin() ; it != tr_props.end() ; ++it ) {
-              //tr_info tr_data = make_tr_groupname(*it,3,eh);
-              //tr_list.insert(tr_list.begin(),tr_data);
-			  if(atoi((*it).c_str()) == i){
-			    std::cout << "vol has tr " << i <<  std::endl;
-			  }
-			  
-            }
-          }
-          rval = DTR->get_verts(vol, verts);
-          if (moab::MB_SUCCESS != rval) {
-            std::cerr << "DAGMC failed to get vertices rval: " << rval << std::endl;
-            exit(EXIT_FAILURE);
+      for (int k = 1; k <= num_vols; ++k) {
+        vol = DAG->entity_by_index( 3, k );
+        std::string prop = DMD->get_volume_property("tr",vol);
+        std::vector<std::string> tr_props = DMD->unpack_string(prop,"|");
+	    //tr_string = DMD->tr_data_eh[vol];
+	    //mat_string = DMD->volume_material_property_data_eh[vol];
+	    //std::cout << "mat string " << mat_string << std::endl;
+	    //std::cout << "tr string " << tr_string << std::endl;
+        if(tr_props.size() >= 1 && tr_props[0] != "" ) {
+          for ( it = tr_props.begin() ; it != tr_props.end() ; ++it ) {
+	  	    if(atoi((*it).c_str()) == i){
+	  	      std::cout << "vol has tr " << i <<  std::endl;
+              rval = DTR->get_verts(vol, verts);
+              if (moab::MB_SUCCESS != rval) {
+                std::cerr << "DAGMC failed to get vertices rval: " << rval << std::endl;
+                exit(EXIT_FAILURE);
+              }
+	  	    }
           }
         }
+      }
       
       // if translate is true, move the vertices accordingly
       if (translate) {
-        double x_0;
-        rval = DTR->pass_coords(*verts.begin(), x_0);
-        std::cout << "x_0 " << x_0 << std::endl;
         rval = DTR->translate(verts, trans_vec);
         if (moab::MB_SUCCESS != rval) {
           std::cerr << "DAGMC failed to translate vertices rval: " << rval << std::endl;
           exit(EXIT_FAILURE);
         }
-        double x;
-        rval = DTR->pass_coords(*verts.begin(), x);
-        std::cout << "x " << x << std::endl;
       }
       // if rotate is true, move the vertics accordingly
       if (rotate) {
