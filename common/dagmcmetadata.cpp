@@ -10,11 +10,12 @@ dagmcMetaData::dagmcMetaData(moab::DagMC* dag_ptr, bool verbosity) {
   // these are the keywords that dagmc will understand
   // from groups if you need to process more
   // they should be added here
-  metadata_keywords.push_back("mat");
-  metadata_keywords.push_back("rho");
-  metadata_keywords.push_back("boundary");
-  metadata_keywords.push_back("tally");
-  metadata_keywords.push_back("importance");
+  metadata_keywords.push_back( "mat" );
+  metadata_keywords.push_back( "rho" );
+  metadata_keywords.push_back( "boundary" );
+  metadata_keywords.push_back( "tally" );
+  metadata_keywords.push_back( "importance" );
+  metadata_keywords.push_back( "tr" );
 
   // allow some synonyms
   keyword_synonyms[ "rho" ] = "density";
@@ -28,6 +29,7 @@ dagmcMetaData::~dagmcMetaData() {
 // load the property data from the dagmc instance
 void dagmcMetaData::load_property_data() {
   parse_material_data();
+  parse_transform_data();
   parse_importance_data();
   parse_boundary_data();
   parse_tally_volume_data();
@@ -42,7 +44,9 @@ std::string dagmcMetaData::get_volume_property(std::string property, moab::Entit
     value = volume_material_property_data_eh[eh];
   } else if (property == "material") {
     value = volume_material_data_eh[eh];
-  } else if (property == "density") {
+  } else if ( property == "tr" ) {
+    value = tr_data_eh[eh];
+  } else if ( property == "density" ) {
     value = volume_density_data_eh[eh];
   } else if (property == "importance") {
     value = volume_importance_data_eh[eh];
@@ -337,6 +341,32 @@ void dagmcMetaData::parse_boundary_data() {
     if (boundary_assignment[0].find("White") != std::string::npos)
       surface_boundary_data_eh[eh] = "White";
   }
+}
+
+void dagmcMetaData::parse_transform_data()
+{
+  std::map<moab::EntityHandle,std::vector<std::string> > tr_assignments;
+  tr_assignments = get_property_assignments("tr",3,":");
+
+  int num_vols = DAG->num_entities( 3 );
+
+  std::vector<std::string> tr_assignment; // transform assignments for the current entity
+  // loop over all volumes
+  for( int i = 1; i <= num_vols; ++i ) {
+    int volid = DAG->id_by_index( 3, i );
+    moab::EntityHandle eh = DAG->entity_by_index( 3, i );
+
+    // vector of transformation numbers
+    tr_assignment = tr_assignments[eh];
+    // set the value of each string for
+    std::string tr = "|";
+    for ( int j = 0 ; j < tr_assignment.size() ; j++ ) {
+      // delimit each particle/value pair with a pipe symbol
+      tr += tr_assignment[j]+"|";
+    }
+    tr_data_eh[eh] = tr;
+  }
+
 }
 
 // parse the surface tally data from the file

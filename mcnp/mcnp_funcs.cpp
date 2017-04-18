@@ -11,6 +11,8 @@ using moab::DagMC;
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
+#include <iostream>
+#include <string>
 
 #ifdef CUBIT_LIBS_PRESENT
 #include <fenv.h>
@@ -165,15 +167,47 @@ void dagmctransform_(int* mxtr, double* trf)
       // loop through all volumes, get ones w/ moving tag, then gather vertices
       moab::EntityHandle vol;
       moab::Range verts;
+/*	  DMD->get_volume_property_data
+	  DMD->tr_data_eh[eh];
       int num_vols = DAG->num_entities(3);
       for (int i = 1; i <= num_vols; ++i) {
-        vol = DAG->entity_by_index( 3, i );
-        rval = DTR->get_verts(vol, verts);
-        if (moab::MB_SUCCESS != rval) {
-          std::cerr << "DAGMC failed to get vertices rval: " << rval << std::endl;
-          exit(EXIT_FAILURE);
-        }
+    std::string prop = DMD->get_volume_property("tr",i,true);
+    std::vector<std::string> tr_props = DMD->unpack_string(prop,"|");
+    moab::EntityHandle eh = DAG->entity_by_id(3,i);
+    if(tr_props.size() >= 1 && tr_props[0] != "" ) {
+      for ( it = tr_props.begin() ; it != tr_props.end() ; ++it ) {
+        tr_info tr_data = make_tr_groupname(*it,3,eh);
+        tr_list.insert(tr_list.begin(),tr_data);
       }
+    }
+	*/  std::string tr_string;
+	    std::string mat_string;
+		std::vector<std::string>::iterator it;
+        int num_vols = DAG->num_entities(3);
+        for (int k = 1; k <= num_vols; ++k) {
+          vol = DAG->entity_by_index( 3, k );
+          std::string prop = DMD->get_volume_property("tr",vol);
+          std::vector<std::string> tr_props = DMD->unpack_string(prop,"|");
+	      tr_string = DMD->tr_data_eh[vol];
+	      mat_string = DMD->volume_material_property_data_eh[vol];
+	      std::cout << "mat string " << mat_string << std::endl;
+	      std::cout << "tr string " << tr_string << std::endl;
+          if(tr_props.size() >= 1 && tr_props[0] != "" ) {
+            for ( it = tr_props.begin() ; it != tr_props.end() ; ++it ) {
+              //tr_info tr_data = make_tr_groupname(*it,3,eh);
+              //tr_list.insert(tr_list.begin(),tr_data);
+			  if(atoi((*it).c_str()) == i){
+			    std::cout << "vol has tr " << i <<  std::endl;
+			  }
+			  
+            }
+          }
+          rval = DTR->get_verts(vol, verts);
+          if (moab::MB_SUCCESS != rval) {
+            std::cerr << "DAGMC failed to get vertices rval: " << rval << std::endl;
+            exit(EXIT_FAILURE);
+          }
+        }
       
       // if translate is true, move the vertices accordingly
       if (translate) {
