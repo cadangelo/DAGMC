@@ -33,6 +33,8 @@ class dagmcMetaData
  private:
   // parse the material data
   void parse_material_data();
+  // parse the material data
+  void parse_transform_data();
   // parse the importance data
   void parse_importance_data();
   // parse the boundary data
@@ -73,6 +75,10 @@ class dagmcMetaData
 
   // tally map
   std::map<moab::EntityHandle, std::string> tally_data_eh;
+
+  // transformation map
+  std::map<moab::EntityHandle, std::string> tr_data_eh;
+  //std::map<moab::EntityHandle, std::vector<std::string>> tr_data_eh;
 
   // set to collect all particle types in the problem
   std::set<std::string> imp_particles;
