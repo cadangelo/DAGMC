@@ -46,6 +46,9 @@ extern "C" {
   /* Reset the current particle state using temporary index n*/
   void dagmc_getpar_( int* n );
 
+  /* Build the implicit complement */
+  void dagmcbuildimplcompl_();
+
   /* Build the obb trees */
   void dagmcbuildobbs_();
 
