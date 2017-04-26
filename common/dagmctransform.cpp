@@ -57,8 +57,8 @@ moab::ErrorCode dagmcTransform::translate(moab::Range vertices, double* trans_ve
       MB_CHK_SET_ERR(rval, "Failed to get vertex coordinates");
     
       // translation vector elements from mcnp trf have the opposite sign
-      xyz[0] = xyz_0[0] + 1;//trans_vec[0]*(-1);
-      //xyz[0] = xyz_0[0] + trans_vec[0]*(-1);
+      //xyz[0] = xyz_0[0] + 1;//trans_vec[0]*(-1);
+      xyz[0] = xyz_0[0] + trans_vec[0]*(-1);
       xyz[1] = xyz_0[1] + trans_vec[1]*(-1);
       xyz[2] = xyz_0[2] + trans_vec[2]*(-1);
 

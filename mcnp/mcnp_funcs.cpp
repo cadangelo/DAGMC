@@ -102,12 +102,12 @@ void dagmcinit_(char* cfile, int* clen,  // geom
     std::cerr << "DAGMC failed to find geometry sets" <<  std::endl;
     exit(EXIT_FAILURE);
   }
-/*  rval = DAG->setup_impl_compl();
+  rval = DAG->setup_impl_compl();
   if (moab::MB_SUCCESS != rval) {
     std::cerr << "DAGMC failed to build implicit complement" <<  std::endl;
     exit(EXIT_FAILURE);
   }
-*/
+
   rval = DAG->setup_indices();
   //rval = DAG->setup_obbs();
   if (moab::MB_SUCCESS != rval) {
@@ -157,7 +157,7 @@ void dagmctransform_(int* mxtr, double* trf)
       //std::cout << "translate " << translate << "  rotate " << rotate << std:: endl;
       
       ////// ****** DELETE****
-	  translate = true;
+	  //translate = true;
 
       // loop through all volumes, if tr tag matches current tr, gather vertices
       moab::EntityHandle vol;
@@ -215,13 +215,18 @@ void dagmctransform_(int* mxtr, double* trf)
 
 void dagmcbuildimplcompl_()
 {
-  moab::ErrorCode rval;
+ /* moab::ErrorCode rval;
   rval = DAG->setup_impl_compl();
   if (moab::MB_SUCCESS != rval) {
     std::cerr << "DAGMC failed to create OBB tree" <<  std::endl;
     exit(EXIT_FAILURE);
   }
-  
+  rval = DAG->setup_indices();
+  if (moab::MB_SUCCESS != rval) {
+    std::cerr << "DAGMC failed to setup indices" <<  std::endl;
+    exit(EXIT_FAILURE);
+  }
+*/  
 }
 void dagmcbuildobbs_()
 {
@@ -231,6 +236,7 @@ void dagmcbuildobbs_()
     std::cerr << "DAGMC failed to create OBB tree" <<  std::endl;
     exit(EXIT_FAILURE);
   }
+  
 }
 void dagmcwritefacets_(char *ffile, int *flen)  // facet file
 {
