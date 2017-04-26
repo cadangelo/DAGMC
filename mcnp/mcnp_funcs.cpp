@@ -103,11 +103,12 @@ void dagmcinit_(char *cfile, int *clen,  // geom
     std::cerr << "DAGMC failed to find geometry sets" <<  std::endl;
     exit(EXIT_FAILURE);
   }
-  rval = DAG->setup_impl_compl();
+/*  rval = DAG->setup_impl_compl();
   if (moab::MB_SUCCESS != rval) {
     std::cerr << "DAGMC failed to build implicit complement" <<  std::endl;
     exit(EXIT_FAILURE);
   }
+*/
   rval = DAG->setup_indices();
   //rval = DAG->setup_obbs();
   if (moab::MB_SUCCESS != rval) {
@@ -155,6 +156,9 @@ void dagmctransform_(int* mxtr, double* trf)
         rotate = false;
       }
       //std::cout << "translate " << translate << "  rotate " << rotate << std:: endl;
+      
+      ////// ****** DELETE****
+	  translate = true;
 
       // loop through all volumes, if tr tag matches current tr, gather vertices
       moab::EntityHandle vol;
@@ -187,11 +191,17 @@ void dagmctransform_(int* mxtr, double* trf)
       
       // if translate is true, move the vertices accordingly
       if (translate) {
+        double x_0;
+        rval = DTR->pass_coords(*verts.begin(), x_0);
+        std::cout << "x_0 " << x_0 << std::endl;
         rval = DTR->translate(verts, trans_vec);
         if (moab::MB_SUCCESS != rval) {
           std::cerr << "DAGMC failed to translate vertices rval: " << rval << std::endl;
           exit(EXIT_FAILURE);
         }
+        double x;
+        rval = DTR->pass_coords(*verts.begin(), x);
+        std::cout << "x " << x << std::endl;
       }
       // if rotate is true, move the vertics accordingly
       if (rotate) {
@@ -204,6 +214,16 @@ void dagmctransform_(int* mxtr, double* trf)
 
 }
 
+void dagmcbuildimplcompl_()
+{
+  moab::ErrorCode rval;
+  rval = DAG->setup_impl_compl();
+  if (moab::MB_SUCCESS != rval) {
+    std::cerr << "DAGMC failed to create OBB tree" <<  std::endl;
+    exit(EXIT_FAILURE);
+  }
+  
+}
 void dagmcbuildobbs_()
 {
   moab::ErrorCode rval;
