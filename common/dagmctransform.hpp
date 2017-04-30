@@ -14,6 +14,8 @@ class dagmcTransform
   // Translate range of vertices according to translation vector
   moab::ErrorCode translate(moab::Range vertices, double* trans_vec);
 
+  // Function to delete obb tree of a single volume
+  moab::ErrorCode delete_obb(moab::EntityHandle vol);
 
   // private member functions
  private:
@@ -21,4 +23,5 @@ class dagmcTransform
  private:
   moab::DagMC *DAG; // Pointer to DAGMC instance
   moab::Interface *MBI; // Pointer to MOAB instance
+
 };

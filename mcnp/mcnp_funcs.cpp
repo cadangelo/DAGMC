@@ -96,7 +96,6 @@ void dagmcinit_(char* cfile, int* clen,  // geom
   DTR = new dagmcTransform(MBI);
 
   // initialize geometry
-  //rval = DAG->init_OBBTree();
   rval = DAG->geom_tool()->find_geomsets();
   if (moab::MB_SUCCESS != rval) {
     std::cerr << "DAGMC failed to find geometry sets" <<  std::endl;
@@ -107,9 +106,7 @@ void dagmcinit_(char* cfile, int* clen,  // geom
     std::cerr << "DAGMC failed to build implicit complement" <<  std::endl;
     exit(EXIT_FAILURE);
   }
-
   rval = DAG->setup_indices();
-  //rval = DAG->setup_obbs();
   if (moab::MB_SUCCESS != rval) {
     std::cerr << "DAGMC failed to setup indices" <<  std::endl;
     exit(EXIT_FAILURE);
@@ -127,16 +124,15 @@ void dagmcinit_(char* cfile, int* clen,  // geom
 void dagmctransform_(int* mxtr, double* trf)
 {
   moab::ErrorCode rval;
-  std::cout << "dag transform fxn" << std::endl;
   std::cout << "mxtr " << *mxtr << std::endl;
   double dx, dy, dz;
   double trans_vec[12];  
   // loop over all TR cards and find translations
   for(int i = 1; i <= *mxtr; ++i)
     {
-      // default # rows in trf array is 17
       std::cout << "transform " << i << std::endl;
-      //std::cout << "tr card # " << -1*trf[i*17] << std::endl;
+	  // fill the transformation vector w/ values from tr card
+      // # rows in trf array is 17
       for (int j = 1; j < 13; j++) {
         trans_vec[j-1] = trf[j+i*17];
       }
@@ -154,21 +150,26 @@ void dagmctransform_(int* mxtr, double* trf)
           0 == trans_vec[9] && 0 == trans_vec[10] && 1 == trans_vec[11]) {
         rotate = false;
       }
-      //std::cout << "translate " << translate << "  rotate " << rotate << std:: endl;
-      
-      ////// ****** DELETE****
-	  //translate = true;
 
-      // loop through all volumes, if tr tag matches current tr, gather vertices
+      // loop through all volumes, 
       moab::EntityHandle vol;
       moab::Range verts;
-      std::string tr_string;
-	  std::string mat_string;
+	  verts.clear();  
+//    std::string tr_string;
+// 	  std::string mat_string;
 	  std::vector<std::string>::iterator it;
       int num_vols = DAG->num_entities(3);
       for (int k = 1; k <= num_vols; ++k) {
         vol = DAG->entity_by_index( 3, k );
-        std::string prop = DMD->get_volume_property("tr",vol);
+	/*	if(DAG->geom_tool()->have_obb_tree()){
+	      rval = DTR->delete_obb(vol);
+          if (moab::MB_SUCCESS != rval) {
+            std::cerr << "DAGMC failed to delete obb tree, rval: " << rval << std::endl;
+            exit(EXIT_FAILURE);
+	      }
+		}
+    */
+		std::string prop = DMD->get_volume_property("tr",vol);
         std::vector<std::string> tr_props = DMD->unpack_string(prop,"|");
 	    //tr_string = DMD->tr_data_eh[vol];
 	    //mat_string = DMD->volume_material_property_data_eh[vol];
@@ -176,11 +177,19 @@ void dagmctransform_(int* mxtr, double* trf)
 	    //std::cout << "tr string " << tr_string << std::endl;
         if(tr_props.size() >= 1 && tr_props[0] != "" ) {
           for ( it = tr_props.begin() ; it != tr_props.end() ; ++it ) {
-	  	    if(atoi((*it).c_str()) == i){
-	  	      std::cout << "vol has tr " << i <<  std::endl;
+	  	    //if tr tag matches current tr, gather vertices   
+			if(atoi((*it).c_str()) == i){
+	  	      std::cout << "vol index " << k << " has tr " << i <<  std::endl;
+		      if(DAG->geom_tool()->have_obb_tree()){
+			    rval = DTR->delete_obb(vol);
+                if (moab::MB_SUCCESS != rval) {
+                  std::cerr << "DAGMC failed to delete obb tree, rval: " << rval << std::endl;
+                  exit(EXIT_FAILURE);
+			    }
+			  }
               rval = DTR->get_verts(vol, verts);
               if (moab::MB_SUCCESS != rval) {
-                std::cerr << "DAGMC failed to get vertices rval: " << rval << std::endl;
+                std::cerr << "DAGMC failed to get vertices, rval: " << rval << std::endl;
                 exit(EXIT_FAILURE);
               }
 	  	    }
@@ -213,21 +222,6 @@ void dagmctransform_(int* mxtr, double* trf)
 
 }
 
-void dagmcbuildimplcompl_()
-{
- /* moab::ErrorCode rval;
-  rval = DAG->setup_impl_compl();
-  if (moab::MB_SUCCESS != rval) {
-    std::cerr << "DAGMC failed to create OBB tree" <<  std::endl;
-    exit(EXIT_FAILURE);
-  }
-  rval = DAG->setup_indices();
-  if (moab::MB_SUCCESS != rval) {
-    std::cerr << "DAGMC failed to setup indices" <<  std::endl;
-    exit(EXIT_FAILURE);
-  }
-*/  
-}
 void dagmcbuildobbs_()
 {
   moab::ErrorCode rval;
@@ -238,6 +232,7 @@ void dagmcbuildobbs_()
   }
   
 }
+
 void dagmcwritefacets_(char *ffile, int *flen)  // facet file
 {
   // terminate all filenames with null char

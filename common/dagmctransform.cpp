@@ -42,12 +42,6 @@ moab::ErrorCode dagmcTransform::get_verts(moab::EntityHandle vol, moab::Range &v
 moab::ErrorCode dagmcTransform::translate(moab::Range vertices, double* trans_vec)
 {
   moab::ErrorCode rval;
-/*
-  // get starting position
-  std::map<EntityHandle, XYZ> orig_positions;
-  rval = get_orig_positions(vertices, orig_positons);
-  MB_CHK_ERR(rval);
-*/
   // loop over all vertices, get coordinates, update position, save
   moab::Range::iterator it;
   double xyz_0[3], xyz[3];
@@ -57,7 +51,6 @@ moab::ErrorCode dagmcTransform::translate(moab::Range vertices, double* trans_ve
       MB_CHK_SET_ERR(rval, "Failed to get vertex coordinates");
     
       // translation vector elements from mcnp trf have the opposite sign
-      //xyz[0] = xyz_0[0] + 1;//trans_vec[0]*(-1);
       xyz[0] = xyz_0[0] + trans_vec[0]*(-1);
       xyz[1] = xyz_0[1] + trans_vec[1]*(-1);
       xyz[2] = xyz_0[2] + trans_vec[2]*(-1);
@@ -75,25 +68,19 @@ moab::ErrorCode dagmcTransform::pass_coords(moab::EntityHandle vert, double &xva
   MB_CHK_SET_ERR(rval, "Failed to get vertex coordinates");
   xval = xyz[0];
 }
-/*
-moab::ErrorCode dagmcTransform::get_orig_positions(moab::Range verts, std::map<EntityHandle, XYZ> &orig_positions)
-{
+
+moab::ErrorCode dagmcTransform::delete_obb(moab::EntityHandle vol)
+{		
   moab::ErrorCode rval;
-  moab::Range::iterator it;
-  //get starting position of each moving vertex
-  // loop over all vertices, get coordinates and save them to map
-  for (it = mv.begin(); it != mv.end(); ++it)
-    {
-      rval = MBI->get_coords(&(*it), 1, xyz);
-      CHECK_ERR(rval);
+  moab::EntityHandle root;
+  std::cout << "delete obb tree for vol " << vol << std::endl;
+  rval = DAG->geom_tool()->get_root(vol, root);
+  if (moab::MB_SUCCESS != rval){
+    std::cout<< "No obb tree root found " << rval << std::endl;
+	return moab::MB_SUCCESS;
+  }	
+  // if a root was found, delete the tree
+  rval = DAG->geom_tool()->obb_tree()->delete_tree(root);
+  MB_CHK_SET_ERR(rval, "Failed to delete obb tree");
 
-      p.x = xyz[0];
-      p.y = xyz[1];
-      p.z = xyz[2];
-
-      //keep original position of each vertex
-      orig_positions[*it] = p;
-    }
 }
-*/
-
