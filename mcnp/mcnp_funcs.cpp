@@ -155,39 +155,34 @@ void dagmctransform_(int* mxtr, double* trf)
       moab::EntityHandle vol;
       moab::Range verts;
 	  verts.clear();  
-//    std::string tr_string;
-// 	  std::string mat_string;
 	  std::vector<std::string>::iterator it;
       int num_vols = DAG->num_entities(3);
       for (int k = 1; k <= num_vols; ++k) {
         vol = DAG->entity_by_index( 3, k );
-	/*	if(DAG->geom_tool()->have_obb_tree()){
+		if(DAG->geom_tool()->have_obb_tree()){
 	      rval = DTR->delete_obb(vol);
           if (moab::MB_SUCCESS != rval) {
             std::cerr << "DAGMC failed to delete obb tree, rval: " << rval << std::endl;
             exit(EXIT_FAILURE);
 	      }
 		}
-    */
+   
 		std::string prop = DMD->get_volume_property("tr",vol);
         std::vector<std::string> tr_props = DMD->unpack_string(prop,"|");
-	    //tr_string = DMD->tr_data_eh[vol];
-	    //mat_string = DMD->volume_material_property_data_eh[vol];
-	    //std::cout << "mat string " << mat_string << std::endl;
-	    //std::cout << "tr string " << tr_string << std::endl;
         if(tr_props.size() >= 1 && tr_props[0] != "" ) {
           for ( it = tr_props.begin() ; it != tr_props.end() ; ++it ) {
 	  	    //if tr tag matches current tr, gather vertices   
 			if(atoi((*it).c_str()) == i){
 	  	      std::cout << "vol index " << k << " has tr " << i <<  std::endl;
-		      if(DAG->geom_tool()->have_obb_tree()){
-			    rval = DTR->delete_obb(vol);
+/*		      if(DAG->geom_tool()->have_obb_tree()){
+			    rval = DAG->geom_tool()->delete_obb_tree(vol);
                 if (moab::MB_SUCCESS != rval) {
                   std::cerr << "DAGMC failed to delete obb tree, rval: " << rval << std::endl;
                   exit(EXIT_FAILURE);
 			    }
 			  }
-              rval = DTR->get_verts(vol, verts);
+*/      
+	  		  rval = DTR->get_verts(vol, verts);
               if (moab::MB_SUCCESS != rval) {
                 std::cerr << "DAGMC failed to get vertices, rval: " << rval << std::endl;
                 exit(EXIT_FAILURE);
@@ -216,8 +211,6 @@ void dagmctransform_(int* mxtr, double* trf)
       //  rval =  DTR->rotate(vert, rotation_params);
       }
 
-      //  loop over vols and delete and rebuild obbs
-      
     }
 
 }
@@ -225,12 +218,18 @@ void dagmctransform_(int* mxtr, double* trf)
 void dagmcbuildobbs_()
 {
   moab::ErrorCode rval;
-  rval = DAG->setup_obbs();
-  if (moab::MB_SUCCESS != rval) {
-    std::cerr << "DAGMC failed to create OBB tree" <<  std::endl;
-    exit(EXIT_FAILURE);
-  }
-  
+  moab::EntityHandle vol;
+//  rval = DAG->setup_obbs();
+  int num_vols = DAG->num_entities(3);
+  for (int k = 1; k <= num_vols; ++k) {
+    vol = DAG->entity_by_index( 3, k );
+	rval = DAG->geom_tool()->construct_obb_tree(vol);
+    if (moab::MB_SUCCESS != rval) {
+      std::cerr << "DAGMC failed to create OBB tree" <<  std::endl;
+      exit(EXIT_FAILURE);
+    }
+  } 
+
 }
 
 void dagmcwritefacets_(char *ffile, int *flen)  // facet file
