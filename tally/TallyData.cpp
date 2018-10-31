@@ -10,6 +10,7 @@
 // CONSTRUCTOR
 //---------------------------------------------------------------------------//
 TallyData::TallyData(unsigned int num_energy_bins, bool total_energy_bin) {
+  std::cout << "tally data from file " << num_energy_bins << std::endl;
   if (num_energy_bins == 0) {
     std::cerr << "Error: number of energy bins cannot be zero" << std::endl;
     exit(EXIT_FAILURE);
@@ -28,8 +29,10 @@ TallyData::TallyData(unsigned int num_energy_bins, bool total_energy_bin) {
     this->num_energy_bins = num_energy_bins + 1;
   } else {
     this->num_energy_bins = num_energy_bins;
+    std::cout << "tally data no tot " << num_energy_bins << std::endl;
   }
 
+    std::cout << "tally data + tot " << num_energy_bins << std::endl;
   this->num_tally_points = 0;
 }
 //---------------------------------------------------------------------------//
@@ -121,6 +124,7 @@ void TallyData::add_score_to_tally(unsigned int tally_point_index,
   assert(tally_point_index < num_tally_points);
   assert(energy_bin < num_energy_bins);
 
+  std::cout << "TD add score " << num_energy_bins << std::endl;
   // update tally for this history with new score
   int index = tally_point_index * num_energy_bins + energy_bin;;
   temp_tally_data.at(index) += score;

@@ -256,10 +256,13 @@ void TrackLengthMeshTally::write_data(double num_histories) {
     unsigned int tet_index = get_entity_index(t);
 
     unsigned int num_ebins = data->get_num_energy_bins();
+    std::cout << "track len " << num_ebins << std::endl;
 
     // if there is a total, dont do anything with it
     if (data->has_total_energy_bin())
       num_ebins--;
+
+    std::cout << "track len- tal vec " << num_ebins << std::endl;
 
     double tally_vect[num_ebins];
     double error_vect[num_ebins];
