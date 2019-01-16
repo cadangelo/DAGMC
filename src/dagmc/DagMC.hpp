@@ -57,7 +57,7 @@ class CartVect;
 class DagMC {
  public:
   // Constructor
-  DagMC(Interface* mb_impl = NULL, double overlap_tolerance = 0., double numerical_precision = .001);
+  DagMC(Interface* mb_impl = NULL, double overlap_tolerance = 0., double numerical_precision = .001, bool restore_obbs = true);
   // Destructor
   ~DagMC();
 

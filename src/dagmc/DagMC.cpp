@@ -34,12 +34,13 @@ namespace moab {
 */
 
 const bool counting = false; /* controls counts of ray casts and pt_in_vols */
+bool gl_restore_obbs = false;
 
 // Empty synonym map for DagMC::parse_metadata()
 const std::map<std::string, std::string> DagMC::no_synonyms;
 
 // DagMC Constructor
-DagMC::DagMC(Interface* mb_impl, double overlap_tolerance, double p_numerical_precision) {
+DagMC::DagMC(Interface* mb_impl, double overlap_tolerance, double p_numerical_precision, bool restore_obbs) {
   moab_instance_created = false;
   // if we arent handed a moab instance create one
   if (NULL == mb_impl) {
@@ -51,7 +52,15 @@ DagMC::DagMC(Interface* mb_impl, double overlap_tolerance, double p_numerical_pr
   MBI = mb_impl;
 
   // make new GeomTopoTool and GeomQueryTool
-  GTT = new moab::GeomTopoTool(MBI, false);
+  if(restore_obbs){
+    //GTT = new moab::GeomTopoTool(MBI, true, 0, true, true);
+    gl_restore_obbs = true;
+    std::cout << "DAG restoring the obbs " << std::endl;
+  }
+  //else{
+    GTT = new moab::GeomTopoTool(MBI, true, 0, true, false);
+  //}
+
   GQT = new moab::GeomQueryTool(GTT, overlap_tolerance, p_numerical_precision);
 
   // This is the correct place to uniquely define default values for the dagmc settings
@@ -166,11 +175,26 @@ ErrorCode DagMC::setup_obbs() {
   ErrorCode rval;
 
   // If we havent got an OBB Tree, build one.
-  if (!GTT->have_obb_tree()) {
+  std::cout << "gtt have obb " << GTT->have_obb_tree() << std::endl;
+  std::cout << "restore obb " << gl_restore_obbs << std::endl;
+  //if (!GTT->have_obb_tree()) {
+  if (!gl_restore_obbs) {
     std::cout << "Building OBB Tree..." << std::endl;
     rval = GTT->construct_obb_trees();
     MB_CHK_SET_ERR(rval, "Failed to build obb trees");
   }
+  else{
+    rval = GTT->restore_obb_index();
+//    MB_CHK_SET_ERR(rval, "Failed to restore obb trees");
+    if (MB_SUCCESS != rval){
+        std::cout << "deleting and reconstructing " << std::endl;
+        rval = GTT->delete_all_obb_trees();
+        MB_CHK_SET_ERR_CONT(rval, "Error: Failed to delete existing obb trees");
+        rval = GTT->construct_obb_trees();
+        MB_CHK_SET_ERR_CONT(rval, "Error: Failed to rebuild obb trees");
+    }
+  }
+    
   return MB_SUCCESS;
 }
 
@@ -198,6 +222,7 @@ ErrorCode DagMC::init_OBBTree() {
   //  rval = GTT->get_implicit_complement(implicit_complement, true);
   rval = setup_impl_compl();
   MB_CHK_SET_ERR(rval, "Failed to setup the implicit compliment");
+  std::cout << "DAG setting up ic " << std::endl;
 
   // build obbs
   rval = setup_obbs();
@@ -206,6 +231,7 @@ ErrorCode DagMC::init_OBBTree() {
   // setup indices
   rval = setup_indices();
   MB_CHK_SET_ERR(rval, "Failed to setup problem indices");
+
 
   return MB_SUCCESS;
 }
@@ -253,6 +279,10 @@ ErrorCode DagMC::finish_loading() {
   MB_CHK_SET_ERR(rval, "Failed to find the geometry sets");
 
   std::cout << "Using faceting tolerance: " << facetingTolerance << std::endl;
+
+//  // build obbs
+//  rval = setup_obbs();
+//  MB_CHK_SET_ERR(rval, "Failed to setup the OBBs");
 
   return MB_SUCCESS;
 }
